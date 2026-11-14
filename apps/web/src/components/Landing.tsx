@@ -4,6 +4,8 @@ import { PixelField } from "./landing/PixelField";
 import { PixelMorph } from "./landing/PixelMorph";
 import { Scramble } from "./landing/Scramble";
 import { RevealOnScroll } from "./landing/Reveal";
+import { PricingCards } from "./landing/PricingCards";
+import { PLAN_PRICES, type Currency, type PaidPlan } from "@/lib/billing/catalog";
 
 const MORPH = { uk: ["ПЛАНУЙ", "ПУБЛІКУЙ", "РОСТИ"], en: ["PLAN", "POST", "GROW"] };
 const TICKER = {
@@ -31,6 +33,8 @@ const DEMO_EN = ["Webinar teaser", "Reels: backstage", "Weekly digest", "New blo
 
 export function Landing({ locale }: { locale: Locale }) {
   const t = DICTS[locale].landing;
+  // Ukrainian visitors pay in UAH (WayForPay), everyone else in USD (Paddle)
+  const currency: Currency = locale === "uk" ? "uah" : "usd";
   const other = locale === "uk" ? { href: "/en", label: "EN" } : { href: "/", label: "UA" };
   const login = `/login?lang=${locale}`;
   const signup = `/login?lang=${locale}&mode=register`;
@@ -44,7 +48,12 @@ export function Landing({ locale }: { locale: Locale }) {
     operatingSystem: "Web, Android, iOS",
     description: t.metaDesc,
     inLanguage: locale,
-    offers: t.plans.map((p) => ({ "@type": "Offer", name: p.name, price: p.price.replace("$", ""), priceCurrency: "USD" })),
+    offers: t.plans.map((p) => ({
+      "@type": "Offer",
+      name: p.name,
+      price: PLAN_PRICES[p.id as PaidPlan].month[currency],
+      priceCurrency: currency.toUpperCase(),
+    })),
   };
 
   return (
@@ -156,21 +165,19 @@ export function Landing({ locale }: { locale: Locale }) {
       <section id="pricing" className="l-section reveal">
         <h2>{t.pricingTitle}</h2>
         <p className="muted center-text">{t.pricingSub}</p>
-        <div className="pricing">
-          {t.plans.map((p) => (
-            <div key={p.name} className={`plan ${"featured" in p && p.featured ? "featured" : ""}`}>
-              {"featured" in p && p.featured && <span className="pill small">{t.popular}</span>}
-              <h3>{p.name}</h3>
-              <div className="price">{p.price}<span>{t.perMonth}</span></div>
-              <ul>
-                {p.items.map((it) => (
-                  <li key={it}>✓ {it}</li>
-                ))}
-              </ul>
-              <Link href={signup} className={`btn ${"featured" in p && p.featured ? "primary" : ""}`}>{p.cta}</Link>
-            </div>
-          ))}
-        </div>
+        <PricingCards
+          plans={t.plans}
+          currency={currency}
+          signup={signup}
+          labels={{
+            monthly: t.monthly,
+            yearly: t.yearly,
+            perMonth: t.perMonth,
+            billedYearly: t.billedYearly,
+            billedMonthly: t.billedMonthly,
+            popular: t.popular,
+          }}
+        />
         <div className="ai-addon">
           <div>
             <h3>{t.aiAddon.t}</h3>

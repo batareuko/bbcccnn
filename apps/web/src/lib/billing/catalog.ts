@@ -54,3 +54,33 @@ export function paddlePriceInfo(priceId: string): { kind: "plan"; plan: PaidPlan
   }
   return null;
 }
+
+export type Currency = "uah" | "usd";
+
+/**
+ * What to show on a price card. For yearly plans the headline is the monthly equivalent,
+ * with the regular monthly price struck through and the real discount; `total` is what is charged.
+ */
+export function priceView(plan: PaidPlan, interval: Interval, currency: Currency) {
+  const monthly = PLAN_PRICES[plan].month[currency];
+  const total = PLAN_PRICES[plan][interval][currency];
+  if (interval === "month") return { perMonth: monthly, compareAt: null as number | null, discountPct: 0, total };
+  return {
+    perMonth: total / 12,
+    compareAt: monthly as number | null,
+    discountPct: Math.round((1 - total / (monthly * 12)) * 100),
+    total,
+  };
+}
+
+/** Biggest yearly discount across plans, for the "Yearly −17%" toggle label. */
+export function maxYearlyDiscount(currency: Currency = "usd") {
+  return Math.max(...PAID_PLANS.map((p) => priceView(p, "year", currency).discountPct));
+}
+
+export function formatMoney(amount: number, currency: Currency) {
+  if (currency === "uah") return `${Math.round(amount).toLocaleString("uk-UA")} ₴`;
+  // whole dollars without cents; monthly equivalents like 15.83 keep cents
+  const digits = Number.isInteger(amount) ? 0 : 2;
+  return `$${amount.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
+}

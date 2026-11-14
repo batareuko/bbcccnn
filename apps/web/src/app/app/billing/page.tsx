@@ -5,6 +5,8 @@ import { api } from "@/lib/client";
 import { useI18n } from "@/i18n/client";
 import { useApp } from "@/components/AppContext";
 import { formatInTz } from "@/lib/tz";
+import { formatMoney, maxYearlyDiscount, priceView, type Currency } from "@/lib/billing/catalog";
+import { PriceTag } from "@/components/pricing/PriceTag";
 
 type Interval = "month" | "year";
 type PlanId = "starter" | "pro" | "agency";
@@ -109,7 +111,8 @@ export default function BillingPage() {
   }, [msg, load, router]);
 
   if (!data) return <p className="muted">{t.common.loading}</p>;
-  const price = (p: { usd: number; uah: number }) => (method === "wayforpay" ? `${p.uah.toLocaleString("uk-UA")} ₴` : `$${p.usd}`);
+  // WayForPay charges in UAH, Paddle in USD
+  const currency: Currency = method === "wayforpay" ? "uah" : "usd";
   const paddle = data.providers.paddle;
   const methodReady = method === "wayforpay" ? data.providers.wayforpay : !!paddle;
 
@@ -199,7 +202,7 @@ export default function BillingPage() {
         <div className="seg">
           <button className={interval === "month" ? "active" : ""} onClick={() => setInterval_("month")}>{tb.monthly}</button>
           <button className={interval === "year" ? "active" : ""} onClick={() => setInterval_("year")}>
-            {tb.yearly} <span className="save">{tb.yearSave}</span>
+            {tb.yearly} <span className="save">−{maxYearlyDiscount(currency)}%</span>
           </button>
         </div>
         <div className="methods">
@@ -216,16 +219,13 @@ export default function BillingPage() {
 
       <div className="pricing billing-plans">
         {(["starter", "pro", "agency"] as const).map((id) => {
-          const p = data.catalog.plans[id][interval];
+          const total = priceView(id, interval, currency).total;
           const isCurrent = data.plan === id && b.interval === interval && b.status === "active";
           return (
             <div key={id} className={`plan ${id === "pro" ? "featured" : ""}`}>
               {isCurrent && <span className="pill small">{tb.currentBadge}</span>}
               <h3>{PLAN_LABEL[id]}</h3>
-              <div className="price">
-                {price(p)}
-                <span>{interval === "year" ? tb.perYear : tb.perMonth}</span>
-              </div>
+              <PriceTag plan={id} interval={interval} currency={currency} labels={tb} />
               <ul>
                 {tb.planItems[id].map((x) => (
                   <li key={x}>✓ {x}</li>
@@ -236,7 +236,7 @@ export default function BillingPage() {
                 disabled={!!busy || !methodReady || isCurrent}
                 onClick={() => buy({ kind: "plan", plan: id })}
               >
-                {busy === id ? t.common.loading : isCurrent ? tb.currentBadge : tb.choose}
+                {busy === id ? t.common.loading : isCurrent ? tb.currentBadge : tb.pay.replace("{total}", formatMoney(total, currency))}
               </button>
             </div>
           );
