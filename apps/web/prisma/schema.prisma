@@ -126,9 +126,24 @@ model Channel {
   /// Bot token / page access token. Encrypt at rest before production.
   accessToken String
   color       String    @default("#6366f1")
+  /// active | disconnected (e.g. our bot was removed from the Telegram channel)
+  status      String    @default("active")
   createdAt   DateTime  @default(now())
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   targets     PostTarget[]
+
+  @@index([platform, externalId])
+}
+
+/// One-time code a user posts in a Telegram channel (`/connect CODE`) to link it via the shared bot.
+model TelegramConnectCode {
+  code        String    @id
+  workspaceId String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId])
 }
 
 model Post {

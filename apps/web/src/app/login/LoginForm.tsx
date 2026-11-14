@@ -57,6 +57,14 @@ export function LoginForm({ initialMode }: { initialMode: "login" | "register" }
         <button className="btn primary big" disabled={busy}>
           {mode === "login" ? t.auth.login : t.auth.register}
         </button>
+        {mode === "register" && (
+          <p className="terms-note">
+            {locale === "en" ? "By creating an account you accept the " : "Створюючи акаунт, ви приймаєте "}
+            <a href={locale === "en" ? "/en/legal/terms" : "/legal/terms"} target="_blank">{locale === "en" ? "Terms" : "Публічну оферту"}</a>
+            {locale === "en" ? " and " : " та "}
+            <a href={locale === "en" ? "/en/legal/privacy" : "/legal/privacy"} target="_blank">{locale === "en" ? "Privacy Policy" : "Політику конфіденційності"}</a>.
+          </p>
+        )}
         <button type="button" className="btn ghost" onClick={() => setMode(mode === "login" ? "register" : "login")}>
           {mode === "login" ? t.auth.toRegister : t.auth.toLogin}
         </button>

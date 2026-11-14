@@ -21,6 +21,8 @@ export async function publishPost(postId: string) {
   for (const t of post.targets) {
     if (t.status === "published") continue;
     try {
+      if (t.channel.status === "disconnected")
+        throw new Error("Channel is disconnected (the bot was removed) — reconnect it on the Channels page");
       const pub = getPublisher(t.channel.platform);
       const r = await pub.publish(
         { externalId: t.channel.externalId, accessToken: t.channel.accessToken },

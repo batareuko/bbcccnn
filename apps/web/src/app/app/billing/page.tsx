@@ -85,6 +85,7 @@ export default function BillingPage() {
   const [interval, setInterval_] = useState<Interval>("month");
   const [method, setMethod] = useState<"wayforpay" | "paddle">(locale === "uk" ? "wayforpay" : "paddle");
   const [packs, setPacks] = useState(1);
+  const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState(params.get("returned") ? tb.returned : "");
 
@@ -216,6 +217,16 @@ export default function BillingPage() {
         </div>
       </div>
       {!methodReady && <p className="notice">{tb.notConfigured}</p>}
+      <label className="consent">
+        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+        <span>
+          {tb.consentA}{" "}
+          <a href={locale === "en" ? "/en/legal/terms" : "/legal/terms"} target="_blank">{tb.consentTerms}</a>{" "}
+          {tb.consentB}{" "}
+          <a href={locale === "en" ? "/en/legal/refund" : "/legal/refund"} target="_blank">{tb.consentRefund}</a>
+          {tb.consentC}
+        </span>
+      </label>
 
       <div className="pricing billing-plans">
         {(["starter", "pro", "agency"] as const).map((id) => {
@@ -233,7 +244,7 @@ export default function BillingPage() {
               </ul>
               <button
                 className={`btn ${id === "pro" ? "primary" : ""}`}
-                disabled={!!busy || !methodReady || isCurrent}
+                disabled={!!busy || !methodReady || isCurrent || !agreed}
                 onClick={() => buy({ kind: "plan", plan: id })}
               >
                 {busy === id ? t.common.loading : isCurrent ? tb.currentBadge : tb.pay.replace("{total}", formatMoney(total, currency))}
@@ -259,7 +270,7 @@ export default function BillingPage() {
               ? `${(data.catalog.creditPack.uah * packs).toLocaleString("uk-UA")} ₴`
               : `$${data.catalog.creditPack.usd * packs}`}
           </b>
-          <button className="btn accent" disabled={!!busy || !methodReady} onClick={() => buy({ kind: "credits" })}>
+          <button className="btn accent" disabled={!!busy || !methodReady || !agreed} title={agreed ? undefined : tb.consentNeeded} onClick={() => buy({ kind: "credits" })}>
             {busy === "credits" ? t.common.loading : tb.buy}
           </button>
         </div>

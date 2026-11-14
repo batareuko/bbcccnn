@@ -5,6 +5,7 @@ import { PixelMorph } from "./landing/PixelMorph";
 import { Scramble } from "./landing/Scramble";
 import { RevealOnScroll } from "./landing/Reveal";
 import { PricingCards } from "./landing/PricingCards";
+import { SiteFooter } from "./SiteFooter";
 import { PLAN_PRICES, type Currency, type PaidPlan } from "@/lib/billing/catalog";
 
 const MORPH = { uk: ["ПЛАНУЙ", "ПУБЛІКУЙ", "РОСТИ"], en: ["PLAN", "POST", "GROW"] };
@@ -202,14 +203,7 @@ export function Landing({ locale }: { locale: Locale }) {
         <Link href={signup} className="btn primary big">{t.finalCta} →</Link>
       </section>
 
-      <footer className="l-footer">
-        <span className="brand"><span className="logo-dot" />PostFlow</span>
-        <span className="muted">© {new Date().getFullYear()} · {t.footer}</span>
-        <div className="row">
-          <Link href="/">Українська</Link>
-          <Link href="/en">English</Link>
-        </div>
-      </footer>
+      <SiteFooter locale={locale} />
     </div>
   );
 }

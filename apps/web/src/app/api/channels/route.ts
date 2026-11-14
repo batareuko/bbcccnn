@@ -13,7 +13,7 @@ const Body = z.object({
   color: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
 });
 
-const publicFields = { id: true, platform: true, name: true, externalId: true, color: true, createdAt: true } as const;
+const publicFields = { id: true, platform: true, name: true, externalId: true, color: true, status: true, createdAt: true } as const;
 
 export const GET = handler(async () => {
   const a = await requireAuth();

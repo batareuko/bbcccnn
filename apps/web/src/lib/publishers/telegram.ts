@@ -12,15 +12,19 @@ async function tg(token: string, method: string, body: unknown) {
 }
 
 const CAPTION_LIMIT = 1024;
+const shared = () => process.env.TELEGRAM_BOT_TOKEN || "";
 
 export const telegram: Publisher = {
   platform: "telegram",
   label: "Telegram",
   maxLength: 4096,
   async verify({ accessToken, externalId }) {
-    await tg(accessToken, "getChat", { chat_id: externalId });
+    await tg(accessToken || shared(), "getChat", { chat_id: externalId });
   },
-  async publish({ accessToken, externalId }, { text, mediaUrls, link }) {
+  async publish({ accessToken: own, externalId }, { text, mediaUrls, link }) {
+    // empty token = channel connected through our shared bot
+    const accessToken = own || shared();
+    if (!accessToken) throw new PublishError("Telegram bot is not configured");
     const body = link && !text.includes(link) ? `${text}\n\n${link}` : text;
     const chat_id = externalId;
 

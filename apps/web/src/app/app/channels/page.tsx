@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { TelegramConnect } from "@/components/TelegramConnect";
 import { api, type Channel, type Platform } from "@/lib/client";
 import { useI18n } from "@/i18n/client";
 
@@ -13,11 +14,13 @@ export default function ChannelsPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const load = () => api<Channel[]>("/api/channels").then(setChannels);
+  const [tgBot, setTgBot] = useState(false);
+  const load = useCallback(() => api<Channel[]>("/api/channels").then(setChannels), []);
   useEffect(() => {
     load();
     api<Platform[]>("/api/platforms").then(setPlatforms);
-  }, []);
+    api<{ enabled: boolean }>("/api/telegram").then((r) => setTgBot(r.enabled)).catch(() => {});
+  }, [load]);
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -56,12 +59,15 @@ export default function ChannelsPage() {
                 <b>{c.name}</b>
                 <span className="muted small">{label(c.platform)} · {c.externalId}</span>
               </div>
+              {c.status === "disconnected" && <span className="badge status-failed" title={t.telegram.disconnectedHint}>{t.telegram.disconnected}</span>}
               <button className="btn ghost danger" onClick={() => remove(c.id)}>{t.common.delete}</button>
             </div>
           ))}
         </div>
+        <div className="stack">
+        {tgBot && <TelegramConnect channels={channels} onConnected={load} />}
         <form className="card stack" onSubmit={add}>
-          <h3>{t.channels.connect}</h3>
+          <h3>{tgBot ? t.telegram.manualTitle : t.channels.connect}</h3>
           <label>
             {t.channels.platform}
             <select value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })}>
@@ -100,6 +106,7 @@ export default function ChannelsPage() {
           {error && <p className="error">{error}</p>}
           <button className="btn primary" disabled={busy}>{t.channels.connect}</button>
         </form>
+        </div>
       </div>
     </div>
   );

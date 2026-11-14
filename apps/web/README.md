@@ -26,11 +26,12 @@ npm run worker                # в окремому терміналі: публ
 | `/app` | Календар: місяць / тиждень / день, перетягування постів, фільтр каналів, метрики, гарячі клавіші `← → T M W D` |
 | `/app/posts` | Список постів з фільтром за статусом |
 | `/app/posts/new` | Редактор: канали, медіа, час (у часовому поясі простору), окремий текст для кожного каналу, AI-рерайт |
-| `/app/channels` | Підключення Telegram, Facebook-сторінки, Instagram Business (+ тестовий mock-канал) |
+| `/app/channels` | Telegram через **спільного бота** (3 кроки, без токенів) або власного бота; Facebook-сторінка, Instagram Business, тестовий mock |
 | `/app/sources` | Автопостинг з WordPress (REST API) або будь-якої RSS/Atom стрічки за шаблоном |
 | `/app/ai` | AI контент-план (агент просування): серія SEO-постів одразу в календар |
 | `/app/billing` | Тарифи й оплата: місяць/рік, WayForPay (₴) або Paddle ($), пакети AI-кредитів, історія платежів, скасування |
-| `/app/settings` | Назва простору, **часовий пояс**, мова, баланс AI-кредитів |
+| `/app/settings` | Назва простору, **часовий пояс**, мова, баланс AI-кредитів, видалення акаунта |
+| `/legal/*`, `/en/legal/*` | Публічна оферта, конфіденційність, повернення коштів, видалення даних (UA/EN), реквізити ФОП з env |
 
 ## Архітектура
 
@@ -74,3 +75,18 @@ id цін у `PADDLE_PRICE_*`. Developer tools → Authentication: client-side t
 Notifications: destination `https://<ваш-домен>/api/billing/paddle/webhook` з подіями `transaction.completed`,
 `subscription.created`, `subscription.updated`, `subscription.canceled`, `subscription.past_due` → секрет у
 `PADDLE_WEBHOOK_SECRET`. Спершу все тестуйте з `PADDLE_ENV=sandbox`.
+
+## Telegram (спільний бот)
+
+1. Створіть бота в @BotFather → `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`; придумайте `TELEGRAM_WEBHOOK_SECRET` (`A-Z a-z 0-9 _ -`).
+2. Продакшн: `npm run telegram setup` — реєструє вебхук `{NEXT_PUBLIC_SITE_URL}/api/telegram/webhook`.
+   Локально без публічної адреси: `npm run telegram poll`.
+3. Користувач: «Канали» → «Підключити Telegram» → додає бота адміністратором (права «Публікація» й «Видалення
+   повідомлень») → надсилає в канал `/connect КОД`. Бот прив'язує канал і видаляє службове повідомлення.
+   Якщо бота видалять із каналу, канал позначається «Відключено», а публікації в нього отримують зрозумілу помилку.
+
+## Юридичні сторінки
+
+Тексти — шаблони в `src/legal/content.ts` (покажіть юристу перед запуском). Реквізити підставляються з
+`LEGAL_NAME`, `LEGAL_TAX_ID`, `LEGAL_ADDRESS`, `LEGAL_EMAIL`, `LEGAL_PHONE`. Перед оплатою користувач окремо
+підтверджує згоду з офертою та автопродовженням; акаунт можна видалити в налаштуваннях (вимога Meta).

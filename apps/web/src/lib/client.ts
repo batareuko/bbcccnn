@@ -14,7 +14,7 @@ export async function api<T = any>(path: string, init?: RequestInit & { json?: u
   return data as T;
 }
 
-export type Channel = { id: string; platform: string; name: string; externalId: string; color: string };
+export type Channel = { id: string; platform: string; name: string; externalId: string; color: string; status?: string };
 export type Target = {
   id: string;
   channelId: string;
