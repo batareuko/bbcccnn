@@ -4,7 +4,7 @@ export const LOCALE_COOKIE = "pf_lang";
 
 const uk = {
   nav: { calendar: "Календар", posts: "Пости", channels: "Канали", sources: "Автопостинг", newPost: "+ Новий пост", logout: "Вийти" },
-  status: { draft: "Чернетка", scheduled: "Заплановано", publishing: "Публікується", published: "Опубліковано", failed: "Помилка" },
+  status: { draft: "Чернетка", scheduled: "Заплановано", publishing: "Публікується", published: "Опубліковано", failed: "Помилка", review: "На модерації", blocked: "Заблоковано" },
   common: {
     save: "Зберегти", delete: "Видалити", cancel: "Скасувати", add: "Додати", loading: "Завантаження…",
     confirmDelete: "Видалити назавжди?", empty: "Поки що порожньо", today: "Сьогодні", error: "Помилка",
@@ -110,6 +110,7 @@ const uk = {
     expired: "Пробний період завершився. Пости збережені, але планування й публікація призупинені.",
     choose: "Обрати тариф",
     planEnded: "Підписка закінчилась. Пости збережені, але планування й публікація призупинені.",
+    suspended: "Робочий простір призупинено модератором. Публікації зупинено. Зв'яжіться з підтримкою.",
   },
   settings: {
     title: "Налаштування", workspace: "Робочий простір", wsName: "Назва", timezone: "Часовий пояс",
@@ -169,7 +170,7 @@ type Dict = typeof uk;
 
 const en: Dict = {
   nav: { calendar: "Calendar", posts: "Posts", channels: "Channels", sources: "Auto-posting", newPost: "+ New post", logout: "Log out" },
-  status: { draft: "Draft", scheduled: "Scheduled", publishing: "Publishing", published: "Published", failed: "Failed" },
+  status: { draft: "Draft", scheduled: "Scheduled", publishing: "Publishing", published: "Published", failed: "Failed", review: "In review", blocked: "Blocked" },
   common: {
     save: "Save", delete: "Delete", cancel: "Cancel", add: "Add", loading: "Loading…",
     confirmDelete: "Delete permanently?", empty: "Nothing here yet", today: "Today", error: "Error",
@@ -272,6 +273,7 @@ const en: Dict = {
     expired: "Your trial has ended. Posts are kept, but scheduling and publishing are paused.",
     choose: "Choose a plan",
     planEnded: "Your subscription has ended. Posts are kept, but scheduling and publishing are paused.",
+    suspended: "This workspace was suspended by a moderator. Publishing is stopped. Please contact support.",
   },
   settings: {
     title: "Settings", workspace: "Workspace", wsName: "Name", timezone: "Time zone",

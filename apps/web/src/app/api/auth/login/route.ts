@@ -12,6 +12,7 @@ export const POST = handler(async (req: Request) => {
   const user = await db.user.findUnique({ where: { email: b.email } });
   if (!user || !(await verifyPassword(b.password, user.passwordHash)))
     throw new HttpError(401, "Wrong email or password");
+  if (user.blockedAt) throw new HttpError(403, "This account is blocked. Contact support.");
   const token = await createSession(user.id);
   return withSessionCookie(NextResponse.json({ token, user: { id: user.id, email: user.email } }), token);
 });

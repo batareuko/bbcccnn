@@ -15,6 +15,10 @@ model User {
   email        String   @unique
   name         String   @default("")
   passwordHash String
+  /// user | admin (platform administrator, can open /admin)
+  role         String   @default("user")
+  blockedAt    DateTime?
+  blockReason  String?
   createdAt    DateTime @default(now())
   sessions     Session[]
   memberships  Membership[]
@@ -56,6 +60,9 @@ model Workspace {
   payments             Payment[]
   /// IANA time zone used to display and enter dates (calendar, scheduler)
   timezone  String   @default("Europe/Kyiv")
+  /// Set by a moderator: publishing, scheduling and AI are stopped
+  suspendedAt   DateTime?
+  suspendReason String?
   createdAt DateTime @default(now())
   members   Membership[]
   channels  Channel[]
@@ -155,7 +162,12 @@ model Post {
   mediaUrls   String    @default("[]")
   /// Link appended / attached (e.g. WordPress article URL)
   link        String?
-  status      String    @default("draft") // draft | scheduled | publishing | published | failed
+  /// draft | scheduled | publishing | published | failed | review (held for moderation) | blocked (by a moderator)
+  status      String    @default("draft")
+  /// Auto-flagged by keyword rules or by a moderator
+  flagged     Boolean   @default(false)
+  flagReason  String?
+  moderatedAt DateTime?
   scheduledAt DateTime?
   publishedAt DateTime?
   /// Set when the post was created automatically from a Source (e.g. WordPress article id)
@@ -213,4 +225,26 @@ model Source {
   createdAt    DateTime  @default(now())
   workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   posts        Post[]
+}
+
+/// Audit log of everything done in /admin.
+model AdminAction {
+  id         String   @id @default(cuid())
+  adminId    String
+  adminEmail String
+  action     String
+  targetType String   // user | workspace | post
+  targetId   String
+  details    String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+}
+
+/// Small key-value store for technical state (worker heartbeat, last cron run…).
+model SystemStatus {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }

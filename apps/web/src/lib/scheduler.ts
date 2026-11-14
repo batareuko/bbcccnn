@@ -53,7 +53,7 @@ export async function publishPost(postId: string) {
 export async function publishDuePosts() {
   const due = await db.post.findMany({
     where: { status: "scheduled", scheduledAt: { lte: new Date() } },
-    select: { id: true, workspace: { select: { plan: true, trialEndsAt: true, currentPeriodEnd: true, billingStatus: true } } },
+    select: { id: true, workspace: { select: { plan: true, trialEndsAt: true, currentPeriodEnd: true, billingStatus: true, suspendedAt: true } } },
     orderBy: { scheduledAt: "asc" },
     take: 50,
   });

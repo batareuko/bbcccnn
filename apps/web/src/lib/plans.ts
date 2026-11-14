@@ -24,7 +24,10 @@ export function effectivePlanId(ws: {
   trialEndsAt: Date | null;
   currentPeriodEnd?: Date | null;
   billingStatus?: string | null;
+  suspendedAt?: Date | null;
 }): PlanId {
+  // suspended by a moderator: nothing gets published or scheduled
+  if (ws.suspendedAt) return "expired";
   if (ws.plan === "trial") return ws.trialEndsAt && ws.trialEndsAt > new Date() ? "trial" : "expired";
   if (!(ws.plan in PLANS) || ws.plan === "expired") return "expired";
   // paid plan: active until the paid period ends; a grace period applies only while a renewal is being retried

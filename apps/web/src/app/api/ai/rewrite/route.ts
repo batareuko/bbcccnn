@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { HttpError, requireAuth } from "@/lib/auth";
+import { HttpError, requireAuth, assertActive } from "@/lib/auth";
 import { handler } from "@/lib/api";
 import { AiError, AiUpstreamError, aiKeyEnvName, isAiConfigured, rewrite } from "@/lib/ai/agents";
-import { planOf } from "@/lib/plans";
 import { withCredits } from "@/lib/ai/credits";
 
 const Body = z.object({
@@ -15,7 +14,7 @@ const Body = z.object({
 
 export const POST = handler(async (req: Request) => {
   const a = await requireAuth();
-  if (!planOf(a.plan).active) throw new HttpError(402, "Your plan is not active — choose a plan to continue");
+  assertActive(a);
   if (!isAiConfigured()) throw new HttpError(503, `AI is not configured (${aiKeyEnvName()})`);
   const b = Body.parse(await req.json());
   try {

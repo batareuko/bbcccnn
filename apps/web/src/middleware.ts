@@ -10,4 +10,4 @@ export function middleware(req: NextRequest) {
   }
 }
 
-export const config = { matcher: ["/app/:path*"] };
+export const config = { matcher: ["/app/:path*", "/admin/:path*"] };

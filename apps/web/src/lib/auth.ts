@@ -2,7 +2,7 @@ import { randomBytes, scrypt as _scrypt, timingSafeEqual, createHash } from "nod
 import { promisify } from "node:util";
 import { cookies, headers } from "next/headers";
 import { db } from "./db";
-import { effectivePlanId } from "./plans";
+import { effectivePlanId, planOf } from "./plans";
 
 const scrypt = promisify(_scrypt) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
 export const SESSION_COOKIE = "pf_session";
@@ -49,6 +49,10 @@ async function readToken() {
 export type AuthContext = {
   userId: string;
   email: string;
+  /** user | admin */
+  role: string;
+  /** workspace suspended by a moderator */
+  suspended: boolean;
   workspaceId: string;
   /** Effective plan id: a trial becomes "expired" after its 14 days. */
   plan: string;
@@ -62,7 +66,7 @@ export async function getAuth(): Promise<AuthContext | null> {
     where: { tokenHash: sha256(token) },
     include: { user: { include: { memberships: { include: { workspace: true } } } } },
   });
-  if (!session || session.expiresAt < new Date()) return null;
+  if (!session || session.expiresAt < new Date() || session.user.blockedAt) return null;
   const hdrWs = (await headers()).get("x-workspace-id");
   const m =
     session.user.memberships.find((x) => x.workspaceId === hdrWs) ?? session.user.memberships[0];
@@ -70,6 +74,8 @@ export async function getAuth(): Promise<AuthContext | null> {
   return {
     userId: session.userId,
     email: session.user.email,
+    role: session.user.role,
+    suspended: !!m.workspace.suspendedAt,
     workspaceId: m.workspaceId,
     plan: effectivePlanId(m.workspace),
   };
@@ -85,4 +91,10 @@ export async function requireAuth() {
   const a = await getAuth();
   if (!a) throw new HttpError(401, "Unauthorized");
   return a;
+}
+
+/** Throws a clear error when the workspace can't schedule/publish/use AI right now. */
+export function assertActive(a: AuthContext) {
+  if (a.suspended) throw new HttpError(403, "This workspace is suspended by a moderator. Please contact support.");
+  if (!planOf(a.plan).active) throw new HttpError(402, "Your plan is not active — choose a plan to continue");
 }

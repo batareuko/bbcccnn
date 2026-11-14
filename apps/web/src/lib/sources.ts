@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { isAiConfigured, rewrite } from "./ai/agents";
 import { chargeCredits, refundCredits } from "./ai/credits";
+import { moderationFields } from "./moderation";
 import { effectivePlanId, planOf } from "./plans";
 
 type WpPost = {
@@ -125,7 +126,7 @@ export async function syncSource(sourceId: string) {
         content,
         link: item.link,
         mediaUrls: JSON.stringify(image ? [image] : []),
-        status: channels.length ? "scheduled" : "draft",
+        ...moderationFields(channels.length ? "scheduled" : "draft", [title, content, ...Object.values(overrides)]),
         scheduledAt: new Date(Date.now() + src.delayMinutes * 60_000),
         sourceId: src.id,
         sourceItemId: item.id,

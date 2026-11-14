@@ -10,7 +10,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "typecheck": "tsc --noEmit",
-    "telegram": "tsx scripts/telegram.ts"
+    "telegram": "tsx scripts/telegram.ts",
+    "admin": "tsx scripts/admin.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

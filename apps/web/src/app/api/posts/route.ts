@@ -1,8 +1,9 @@
 import { db } from "@/lib/db";
-import { HttpError, requireAuth } from "@/lib/auth";
+import { HttpError, requireAuth, assertActive } from "@/lib/auth";
 import { handler } from "@/lib/api";
 import { PostInput } from "@/lib/post-input";
 import { planOf } from "@/lib/plans";
+import { moderationFields } from "@/lib/moderation";
 
 /** GET /api/posts?from=ISO&to=ISO&status=scheduled */
 export const GET = handler(async (req: Request) => {
@@ -26,7 +27,7 @@ export const GET = handler(async (req: Request) => {
 export const POST = handler(async (req: Request) => {
   const a = await requireAuth();
   const b = PostInput.parse(await req.json());
-  if (b.status === "scheduled" && !planOf(a.plan).active) throw new HttpError(402, "Your plan is not active — choose a plan to schedule posts");
+  if (b.status === "scheduled") assertActive(a);
   if (b.status === "scheduled") {
     if (!b.scheduledAt) throw new HttpError(400, "scheduledAt is required for scheduled posts");
     if (!b.targets.length) throw new HttpError(400, "Choose at least one channel");
@@ -44,7 +45,7 @@ export const POST = handler(async (req: Request) => {
       content: b.content,
       mediaUrls: JSON.stringify(b.mediaUrls),
       link: b.link ?? null,
-      status: b.status,
+      ...moderationFields(b.status, [b.title, b.content, ...b.targets.map((t) => t.contentOverride)]),
       scheduledAt: b.scheduledAt ?? null,
       targets: { create: b.targets.map((t) => ({ channelId: t.channelId, contentOverride: t.contentOverride || null })) },
     },

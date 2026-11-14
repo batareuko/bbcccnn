@@ -482,3 +482,30 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; margin: 0 1px
 .waiting { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
 .spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--primary); animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.badge.status-review { background: #fef3c7; color: #92400e; }
+.badge.status-blocked { background: #1f1f2e; color: #fff; }
+.chip.status-review { border-left-style: dotted; }
+.chip.status-blocked { opacity: .5; text-decoration: line-through; }
+
+/* ── admin ──────────────────────────────── */
+.admin .topbar { background: color-mix(in srgb, #111827 6%, var(--bg)); }
+.admin .logo-dot { background: linear-gradient(135deg, #111827, var(--danger)); }
+.admin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.admin-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.health { font-size: 14px; }
+.health.ok::first-letter { color: var(--ok); }
+.health.bad::first-letter { color: var(--danger); }
+.health.bad { font-weight: 600; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+.kpis div { display: flex; flex-direction: column; }
+.kpis b { font-family: var(--mono); font-size: 22px; letter-spacing: -.02em; }
+.kpis span { font-size: 12px; color: var(--muted); }
+.err-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.err-row:last-child { border-bottom: 0; }
+.admin-user.blocked { border-color: var(--danger); }
+.ws-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); }
+.ws-row.suspended { outline: 1px dashed var(--danger); }
+.mod-post.flagged { border-left: 4px solid var(--warn); }
+.mod-text { margin: 0; white-space: pre-wrap; max-height: 220px; overflow: auto; font-size: 14px; }
+.btn.small-btn.danger { color: var(--danger); }
+@media (max-width: 1100px) { .admin-grid, .admin-grid.two { grid-template-columns: 1fr; } }

@@ -43,7 +43,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <Link href="/app/posts/new" className="btn primary">{t.nav.newPost}</Link>
             <LogoutButton />
           </header>
-          {planId === "expired" ? (
+          {ws.suspendedAt ? (
+            <div className="trial-bar expired">{t.trial.suspended}</div>
+          ) : planId === "expired" ? (
             <div className="trial-bar expired">{ws.plan === "trial" ? t.trial.expired : t.trial.planEnded} <Link href="/app/billing" className="btn small-btn">{t.trial.choose}</Link></div>
           ) : daysLeft !== null ? (
             <div className="trial-bar">{t.trial.left.replace("{n}", String(daysLeft))} <Link href="/app/billing" className="btn small-btn">{t.trial.choose}</Link></div>
