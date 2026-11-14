@@ -5,6 +5,7 @@
  */
 import { publishDuePosts } from "../src/lib/scheduler";
 import { syncAllSources } from "../src/lib/sources";
+import { reconcileWfpSubscriptions } from "../src/lib/billing/wayforpay";
 
 const INTERVAL_MS = Number(process.env.WORKER_INTERVAL_MS ?? 60_000);
 
@@ -13,6 +14,8 @@ async function tick() {
     const sources = await syncAllSources();
     const created = sources.reduce((n, s) => n + ("created" in s ? s.created ?? 0 : 0), 0);
     const published = await publishDuePosts();
+    const billing = await reconcileWfpSubscriptions();
+    if (billing.length) console.log(new Date().toISOString(), { billing });
     if (created || published.length)
       console.log(new Date().toISOString(), { imported: created, published });
   } catch (e) {

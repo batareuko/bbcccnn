@@ -22,7 +22,7 @@ export const GET = handler(async (_req: Request, { params }: Ctx) => {
 
 export const PATCH = handler(async (req: Request, { params }: Ctx) => {
   const a = await requireAuth();
-  if (!planOf(a.plan).active) throw new HttpError(402, "Your trial has ended — choose a plan to continue");
+  if (!planOf(a.plan).active) throw new HttpError(402, "Your plan is not active — choose a plan to continue");
   const { id } = await params;
   const existing = await load(id, a.workspaceId);
   if (existing.status === "publishing" || existing.status === "published")

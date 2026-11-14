@@ -82,14 +82,13 @@ export default function SettingsPage() {
         <h3>✨ {t.credits.balance}</h3>
         <div className="credits-big mono">{app.aiCredits}</div>
         <p className="muted small">{t.credits.hint}</p>
-        <button className="btn" disabled title={t.credits.soon}>{t.credits.topup}</button>
-        <span className="muted small">{t.credits.soon}</span>
+        <a className="btn" href="/app/billing#credits">{t.credits.topup}</a>
       </div>
 
       <div className="card stack" style={{ marginTop: 16 }}>
         <h3>{t.settings.account}</h3>
         <span>{app.email}</span>
-        <span className="muted">{t.settings.plan}: <b>{app.plan}</b></span>
+        <span className="muted">{t.settings.plan}: <b>{app.plan}</b> · <a href="/app/billing">{t.billing.title} →</a></span>
       </div>
     </div>
   );

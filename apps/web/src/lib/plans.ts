@@ -3,6 +3,8 @@
  * AI is NOT part of a plan: it is billed separately via prepaid AI credits (Workspace.aiCredits).
  * Billing (Stripe / WayForPay / LiqPay) plugs in later and simply sets Workspace.plan.
  */
+import { GRACE_DAYS } from "./billing/catalog";
+
 export const TRIAL_DAYS = 14;
 
 export const PLANS = {
@@ -17,9 +19,18 @@ export const PLANS = {
 export type PlanId = keyof typeof PLANS;
 
 /** The plan that is actually in force right now (trial turns into "expired" after trialEndsAt). */
-export function effectivePlanId(ws: { plan: string; trialEndsAt: Date | null }): PlanId {
+export function effectivePlanId(ws: {
+  plan: string;
+  trialEndsAt: Date | null;
+  currentPeriodEnd?: Date | null;
+  billingStatus?: string | null;
+}): PlanId {
   if (ws.plan === "trial") return ws.trialEndsAt && ws.trialEndsAt > new Date() ? "trial" : "expired";
-  return ws.plan in PLANS ? (ws.plan as PlanId) : "expired";
+  if (!(ws.plan in PLANS) || ws.plan === "expired") return "expired";
+  // paid plan: active until the paid period ends; a grace period applies only while a renewal is being retried
+  const grace = ws.billingStatus === "canceled" ? 0 : GRACE_DAYS * 864e5;
+  if (ws.currentPeriodEnd && ws.currentPeriodEnd.getTime() + grace < Date.now()) return "expired";
+  return ws.plan as PlanId;
 }
 
 export function planOf(id: string) {

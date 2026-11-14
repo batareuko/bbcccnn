@@ -26,7 +26,7 @@ export const GET = handler(async (req: Request) => {
 export const POST = handler(async (req: Request) => {
   const a = await requireAuth();
   const b = PostInput.parse(await req.json());
-  if (b.status === "scheduled" && !planOf(a.plan).active) throw new HttpError(402, "Your trial has ended — choose a plan to schedule posts");
+  if (b.status === "scheduled" && !planOf(a.plan).active) throw new HttpError(402, "Your plan is not active — choose a plan to schedule posts");
   if (b.status === "scheduled") {
     if (!b.scheduledAt) throw new HttpError(400, "scheduledAt is required for scheduled posts");
     if (!b.targets.length) throw new HttpError(400, "Choose at least one channel");

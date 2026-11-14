@@ -28,7 +28,7 @@ const Body = z.object({
 export const POST = handler(async (req: Request) => {
   const a = await requireAuth();
   const plan = planOf(a.plan);
-  if (!plan.active) throw new HttpError(402, "Your trial has ended — choose a plan to continue");
+  if (!plan.active) throw new HttpError(402, "Your plan is not active — choose a plan to continue");
   if (!isAiConfigured()) throw new HttpError(503, `AI is not configured (${aiKeyEnvName()})`);
   const b = Body.parse(await req.json());
 

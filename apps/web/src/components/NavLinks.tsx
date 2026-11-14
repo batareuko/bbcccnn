@@ -12,6 +12,7 @@ export function NavLinks() {
     ["/app/channels", t.nav.channels],
     ["/app/sources", t.nav.sources],
     ["/app/ai", "✨ " + t.planner.nav],
+    ["/app/billing", t.billing.nav],
     ["/app/settings", t.settings.title],
   ] as const;
   return (

@@ -38,15 +38,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <Link href="/app" className="brand"><span className="logo-dot" />PostFlow</Link>
             <NavLinks />
             <div className="spacer" />
-            <Link href="/app/settings" className="credits" title={t.credits.title}>✨ <b>{ws.aiCredits}</b></Link>
+            <Link href="/app/billing#credits" className="credits" title={t.credits.title}>✨ <b>{ws.aiCredits}</b></Link>
             <LangSwitch />
             <Link href="/app/posts/new" className="btn primary">{t.nav.newPost}</Link>
             <LogoutButton />
           </header>
           {planId === "expired" ? (
-            <div className="trial-bar expired">{t.trial.expired} <Link href="/app/settings" className="btn small-btn">{t.trial.choose}</Link></div>
+            <div className="trial-bar expired">{ws.plan === "trial" ? t.trial.expired : t.trial.planEnded} <Link href="/app/billing" className="btn small-btn">{t.trial.choose}</Link></div>
           ) : daysLeft !== null ? (
-            <div className="trial-bar">{t.trial.left.replace("{n}", String(daysLeft))} <Link href="/app/settings" className="btn small-btn">{t.trial.choose}</Link></div>
+            <div className="trial-bar">{t.trial.left.replace("{n}", String(daysLeft))} <Link href="/app/billing" className="btn small-btn">{t.trial.choose}</Link></div>
           ) : null}
           <main className="content">{children}</main>
         </div>

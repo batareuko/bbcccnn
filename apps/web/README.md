@@ -29,6 +29,7 @@ npm run worker                # в окремому терміналі: публ
 | `/app/channels` | Підключення Telegram, Facebook-сторінки, Instagram Business (+ тестовий mock-канал) |
 | `/app/sources` | Автопостинг з WordPress (REST API) або будь-якої RSS/Atom стрічки за шаблоном |
 | `/app/ai` | AI контент-план (агент просування): серія SEO-постів одразу в календар |
+| `/app/billing` | Тарифи й оплата: місяць/рік, WayForPay (₴) або Paddle ($), пакети AI-кредитів, історія платежів, скасування |
 | `/app/settings` | Назва простору, **часовий пояс**, мова, баланс AI-кредитів |
 
 ## Архітектура
@@ -39,6 +40,10 @@ npm run worker                # в окремому терміналі: публ
 - **Мультиорендність**: User → Membership → Workspace; усі дані прив'язані до робочого простору.
 - **Тарифи** (`src/lib/plans.ts`): 14-денний trial з лімітами Pro → після завершення режим лише для читання,
   планування/публікація призупиняються до вибору тарифу (Starter / Pro / Agency). Оплата підключається пізніше — вона лише змінює `Workspace.plan`.
+- **Оплата** (`src/lib/billing/*`): **WayForPay** для українських карток (гривня, регулярні платежі) і **Paddle** для решти світу
+  (USD, Paddle — merchant of record і сам сплачує VAT). Сповіщення перевіряються за підписом (HMAC_MD5 / HMAC-SHA256),
+  обробляються ідемпотентно (`Payment` унікальний за провайдером і зовнішнім id). Пропущені продовження WayForPay
+  підхоплює звірка через regular API у воркері/cron. Ціни — `src/lib/billing/catalog.ts`.
 - **AI — окрема плата**: кредити `Workspace.aiCredits` + журнал `AiUsage`. 1 рерайт = 1 кредит, AI-план = 1 кредит/пост,
   автоматичне повернення при помилці. Trial дає 30 кредитів.
 - **AI «під капотом»** (`src/lib/ai/providers.ts`): `AI_PROVIDER=gemini` (за замовчуванням), `deepseek` або `anthropic`.
@@ -55,6 +60,17 @@ npm run worker                # в окремому терміналі: публ
 
 1. Нові мережі: X, LinkedIn, Threads, TikTok, Pinterest, YouTube Shorts; OAuth-підключення замість ручних токенів.
 2. Шифрування токенів каналів у базі (KMS / libsodium).
-3. Оплата (Stripe / WayForPay / LiqPay): тарифи + пакети AI-кредитів.
+3. Оплата — ✅ WayForPay + Paddle. Далі: рахунки-фактури, промокоди, зміна тарифу з перерахунком (proration).
 4. Мобільні застосунки (Expo / React Native) на тому ж API.
 5. Завантаження медіа (S3/R2) замість URL, команда та ролі, аналітика.
+
+## Підключення оплати
+
+**WayForPay:** особистий кабінет → налаштування мерчанта → `merchantAccount`, `secretKey`, `merchantPassword`
+→ `WAYFORPAY_*` у `.env`. Домен сайту має бути зареєстрований у WayForPay. Адреси сповіщень передаються автоматично.
+
+**Paddle:** Catalog → створіть продукти Starter/Pro/Agency (ціни місяць і рік) та «AI credits 100» (разова ціна) →
+id цін у `PADDLE_PRICE_*`. Developer tools → Authentication: client-side token та API key. Developer tools →
+Notifications: destination `https://<ваш-домен>/api/billing/paddle/webhook` з подіями `transaction.completed`,
+`subscription.created`, `subscription.updated`, `subscription.canceled`, `subscription.past_due` → секрет у
+`PADDLE_WEBHOOK_SECRET`. Спершу все тестуйте з `PADDLE_ENV=sandbox`.

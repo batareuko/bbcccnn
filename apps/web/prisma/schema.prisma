@@ -39,6 +39,21 @@ model Workspace {
   trialEndsAt DateTime?
   /// Prepaid AI credits (AI is billed separately from the plan). 1 rewrite = 1 credit, AI plan = 1 credit per post.
   aiCredits Int      @default(0)
+
+  // ── billing (paid plans) ──
+  billingProvider      String?   // wayforpay | paddle
+  billingInterval      String?   // month | year
+  billingStatus        String?   // active | past_due | canceled
+  /// Paid access lasts until this moment (+ a short grace period)
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  /// Ignore webhook events older than the last one applied (Paddle can deliver out of order)
+  billingUpdatedAt     DateTime?
+  paddleSubscriptionId String?   @unique
+  paddleCustomerId     String?
+  /// orderReference of the first WayForPay payment = id of the regular (recurring) payment
+  wfpRegularRef        String?   @unique
+  payments             Payment[]
   /// IANA time zone used to display and enter dates (calendar, scheduler)
   timezone  String   @default("Europe/Kyiv")
   createdAt DateTime @default(now())
@@ -47,6 +62,30 @@ model Workspace {
   posts     Post[]
   sources   Source[]
   aiUsage   AiUsage[]
+}
+
+/// Every money movement from a payment provider (idempotent by provider + externalId).
+model Payment {
+  id          String    @id @default(cuid())
+  workspaceId String
+  provider    String    // wayforpay | paddle
+  /// WayForPay orderReference or Paddle transaction id
+  externalId  String
+  kind        String    // subscription | renewal | credits
+  plan        String?
+  interval    String?
+  credits     Int?
+  /// amount in minor units (kopiyky / cents)
+  amount      Int
+  currency    String
+  status      String    @default("pending") // pending | paid | failed
+  error       String?
+  createdAt   DateTime  @default(now())
+  paidAt      DateTime?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalId])
+  @@index([workspaceId, createdAt])
 }
 
 /// Ledger of AI credit movements: negative = spent, positive = top-up / refund.
