@@ -1,0 +1,261 @@
+export const LOCALES = ["uk", "en"] as const;
+export type Locale = (typeof LOCALES)[number];
+export const LOCALE_COOKIE = "pf_lang";
+
+const uk = {
+  nav: { calendar: "Календар", posts: "Пости", channels: "Канали", sources: "Автопостинг", newPost: "+ Новий пост", logout: "Вийти" },
+  status: { draft: "Чернетка", scheduled: "Заплановано", publishing: "Публікується", published: "Опубліковано", failed: "Помилка" },
+  common: {
+    save: "Зберегти", delete: "Видалити", cancel: "Скасувати", add: "Додати", loading: "Завантаження…",
+    confirmDelete: "Видалити назавжди?", empty: "Поки що порожньо", today: "Сьогодні", error: "Помилка",
+  },
+  auth: {
+    tagline: "Планувальник публікацій у соцмережах з AI-рерайтом",
+    email: "Email", password: "Пароль", login: "Увійти", register: "Створити акаунт",
+    toRegister: "Немає акаунта? Зареєструватися", toLogin: "Вже є акаунт? Увійти",
+  },
+  calendar: {
+    weekdays: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"],
+    prev: "← Попередній", next: "Наступний →", more: "ще", addHere: "Додати пост на цей день",
+    dragHint: "Перетягуйте пости, щоб перенести. Подвійний клік — новий пост.", moved: "Перенесено",
+    views: { month: "Місяць", week: "Тиждень", day: "День" },
+    stats: { total: "Усього" },
+  },
+  posts: {
+    title: "Усі пости", noPosts: "Постів ще немає. Створіть перший!", noDate: "без дати",
+    filterAll: "Усі",
+  },
+  editor: {
+    newTitle: "Новий пост", editTitle: "Редагування поста",
+    internalTitle: "Назва (для себе)", text: "Текст поста", media: "Зображення (URL, по одному на рядок)",
+    link: "Посилання", channels: "Канали", noChannels: "Спочатку підключіть канал",
+    when: "Коли опублікувати", saveDraft: "Зберегти чернетку", schedule: "Запланувати", publishNow: "Опублікувати зараз",
+    perChannel: "Окремий текст для каналу (необов'язково)", chars: "символів",
+    ai: "AI-рерайт", aiHint: "AI перепише текст під стиль і ліміти кожного вибраного каналу.",
+    tone: "Тон", tonePh: "напр. дружній, експертний, з гумором", language: "Мова", sameLang: "як в оригіналі",
+    instructions: "Додаткові побажання", aiRun: "Переписати для каналів", aiBusy: "AI пише…",
+    aiChooseChannels: "Оберіть канали, щоб AI адаптував текст",
+    published: "Опубліковано", targetsTitle: "Результат публікації", retry: "Повторити невдалі",
+    readonly: "Пост уже опубліковано — редагування недоступне.",
+  },
+  channels: {
+    title: "Канали", subtitle: "Куди публікувати. Токени зберігаються лише на сервері.",
+    platform: "Платформа", name: "Назва", externalId: "ID чату / сторінки / акаунта", token: "Токен доступу",
+    connect: "Підключити", none: "Ще немає каналів",
+    help: {
+      telegram: "Створіть бота через @BotFather, додайте його адміністратором у канал. ID: @назва_каналу або -100…",
+      facebook: "ID сторінки та Page Access Token (Meta for Developers → Graph API, дозволи pages_manage_posts).",
+      instagram: "Instagram Business/Creator, пов'язаний зі сторінкою FB. ID — instagram_business_account, токен — Page token з instagram_content_publish. Потрібне зображення.",
+      mock: "Тестовий канал — нічого не надсилає, лише позначає пост опублікованим.",
+    } as Record<string, string>,
+  },
+  sources: {
+    title: "Автопостинг", subtitle: "Нові статті з WordPress-сайту або будь-якої RSS-стрічки автоматично стають постами.",
+    type: "Тип", url: "Адреса сайту / RSS", template: "Шаблон", templateHint: "Змінні: {title} {excerpt} {link}",
+    delay: "Затримка, хв", aiRewrite: "AI-рерайт під кожен канал", enabled: "Увімкнено",
+    sync: "Перевірити зараз", lastChecked: "Перевірено", never: "ще ні", imported: "Імпортовано нових",
+    none: "Ще немає джерел", onlyNew: "Імпортуються тільки статті, опубліковані після додавання джерела.",
+  },
+  planner: {
+    title: "AI контент-план", nav: "AI-план",
+    subtitle: "Агент просування: опишіть продукт — AI складе серію постів під SEO-ключі, рознесе по днях і покладе в календар.",
+    product: "Що просуваємо", productPh: "Опис продукту/послуги, переваги, ціна, сайт…",
+    audience: "Аудиторія", audiencePh: "напр. SMM-фрилансери та власники малого бізнесу",
+    goal: "Мета", goalPh: "напр. реєстрації на пробний період",
+    keywords: "SEO-ключові слова", keywordsPh: "планувальник постів, автопостинг telegram, smm інструмент",
+    start: "Початок", days: "Днів", perWeek: "Постів на тиждень",
+    asDrafts: "Як чернетки (перевірю сам)", asScheduled: "Одразу запланувати",
+    run: "Згенерувати {n} постів", busy: "AI складає план… (до хвилини)",
+    needPlan: "Недостатньо AI-кредитів — поповніть баланс у налаштуваннях.", needKey: "AI не налаштовано: додайте ключ API (GEMINI_API_KEY) на сервері.",
+  },
+  credits: {
+    title: "AI-кредити", balance: "Баланс AI-кредитів",
+    hint: "AI оплачується окремо від тарифу: 1 рерайт = 1 кредит, AI-план = 1 кредит за пост. На пробному періоді — 30 кредитів у подарунок.",
+    rewriteCost: "1 кредит", planCost: "{n} кредитів", topup: "Поповнити", soon: "Оплата пакетів кредитів з'явиться незабаром.",
+  },
+  trial: {
+    left: "Пробний період: залишилось днів — {n}. Усі можливості Pro + 30 AI-кредитів.",
+    expired: "Пробний період завершився. Пости збережені, але планування й публікація призупинені.",
+    choose: "Обрати тариф",
+  },
+  settings: {
+    title: "Налаштування", workspace: "Робочий простір", wsName: "Назва", timezone: "Часовий пояс",
+    tzHint: "Усі дати в календарі та планувальнику показуються в цьому поясі.", language: "Мова інтерфейсу",
+    plan: "Тариф", saved: "Збережено", account: "Акаунт", now: "Зараз у цьому поясі",
+  },
+  landing: {
+    metaTitle: "PostFlow — планувальник публікацій у соцмережах з AI",
+    metaDesc: "Плануйте пости в Telegram, Facebook та Instagram у календарі, автоматично публікуйте статті з WordPress і RSS, переписуйте тексти з AI.",
+    badge: "Telegram · Facebook · Instagram · WordPress · RSS",
+    h1a: "Публікуйте всюди.", h1b: "Плануйте за хвилини.",
+    lead: "PostFlow — це календар контенту, автопостинг із сайту та AI-копірайтер в одному місці. Напишіть один раз — AI адаптує текст під кожну соцмережу, а планувальник опублікує вчасно.",
+    ctaPrimary: "Спробувати 14 днів безкоштовно", ctaSecondary: "Як це працює",
+    noCard: "14 днів безкоштовно з усіма функціями. Без картки.",
+    featuresTitle: "Усе, щоб вести соцмережі без рутини",
+    features: [
+      { icon: "📅", t: "Візуальний календар", d: "Бачите весь контент-план на місяць. Клік по дню — і новий пост уже з датою." },
+      { icon: "⏱", t: "Точний планувальник", d: "Пости виходять у заданий час у всі вибрані канали. Невдалі — можна повторити одним кліком." },
+      { icon: "✨", t: "AI-рерайт", d: "Один текст → окремі версії для Telegram, Facebook та Instagram з урахуванням лімітів, стилю й хештегів." },
+      { icon: "🔁", t: "Автопостинг із сайту", d: "Нова стаття на WordPress або в RSS — і пост автоматично йде в соцмережі за вашим шаблоном." },
+      { icon: "👥", t: "Багато каналів і проєктів", d: "Підключайте десятки сторінок і каналів. Ідеально для агенцій і SMM-фрилансерів." },
+      { icon: "📱", t: "Веб, Android та iOS", d: "Плануйте з комп'ютера чи телефону — мобільні застосунки на тому ж API (скоро)." },
+    ],
+    howTitle: "Як це працює",
+    steps: [
+      { t: "Підключіть канали", d: "Telegram-бот, сторінка Facebook чи Instagram — пару хвилин." },
+      { t: "Напишіть або імпортуйте", d: "Створіть пост вручну чи під'єднайте сайт для автопостингу." },
+      { t: "Покращте з AI", d: "Отримайте версію тексту для кожної мережі одним натиском." },
+      { t: "Заплануйте", d: "Оберіть дату в календарі — решту PostFlow зробить сам." },
+    ],
+    pricingTitle: "Прості тарифи", perMonth: "/міс",
+    pricingSub: "Кожен тариф — 14 днів безкоштовно з усіма можливостями Pro.",
+    aiAddon: { t: "✨ AI-копірайтер — окремо", d: "Рерайт під кожну мережу та AI контент-план оплачуються пакетами кредитів: платите лише за те, чим користуєтесь. 30 кредитів — у подарунок на пробному періоді.", price: "від $5 / 100 кредитів" },
+    plans: [
+      { name: "Starter", price: "$9", items: ["5 каналів", "200 запланованих постів", "2 джерела автопостингу", "Календар і планувальник"], cta: "Спробувати безкоштовно" },
+      { name: "Pro", price: "$19", items: ["15 каналів", "1000 запланованих постів", "10 джерел автопостингу", "Командна робота (скоро)"], cta: "Спробувати безкоштовно", featured: true },
+      { name: "Agency", price: "$49", items: ["100 каналів", "Без ліміту постів", "100 джерел", "Пріоритетна підтримка"], cta: "Спробувати безкоштовно" },
+    ],
+    popular: "Популярний",
+    faqTitle: "Питання та відповіді",
+    faq: [
+      { q: "Чим PostFlow відрізняється від плагінів для WordPress?", a: "PostFlow працює окремо від сайту: не навантажує WordPress, планує не лише статті, а будь-які пости, і має AI та мобільні застосунки." },
+      { q: "Які соцмережі підтримуються?", a: "Зараз — Telegram, Facebook-сторінки та Instagram Business. Далі — X, LinkedIn, Threads, Pinterest." },
+      { q: "Чи безпечні мої токени?", a: "Токени зберігаються лише на сервері й ніколи не повертаються в браузер." },
+      { q: "Якою мовою пише AI?", a: "Будь-якою: за замовчуванням — мовою оригіналу, або вкажіть потрібну." },
+    ],
+    finalTitle: "Готові звільнити години на тиждень?", finalCta: "Створити акаунт",
+    footer: "Зроблено в Україні 🇺🇦", login: "Увійти", openApp: "Відкрити застосунок",
+  },
+};
+
+type Dict = typeof uk;
+
+const en: Dict = {
+  nav: { calendar: "Calendar", posts: "Posts", channels: "Channels", sources: "Auto-posting", newPost: "+ New post", logout: "Log out" },
+  status: { draft: "Draft", scheduled: "Scheduled", publishing: "Publishing", published: "Published", failed: "Failed" },
+  common: {
+    save: "Save", delete: "Delete", cancel: "Cancel", add: "Add", loading: "Loading…",
+    confirmDelete: "Delete permanently?", empty: "Nothing here yet", today: "Today", error: "Error",
+  },
+  auth: {
+    tagline: "Social media scheduler with an AI rewriter",
+    email: "Email", password: "Password", login: "Log in", register: "Create account",
+    toRegister: "No account? Sign up", toLogin: "Already have an account? Log in",
+  },
+  calendar: {
+    weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    prev: "← Previous", next: "Next →", more: "more", addHere: "Add a post on this day",
+    dragHint: "Drag posts to reschedule. Double-click to add a post.", moved: "Moved",
+    views: { month: "Month", week: "Week", day: "Day" },
+    stats: { total: "Total" },
+  },
+  posts: { title: "All posts", noPosts: "No posts yet. Create your first one!", noDate: "no date", filterAll: "All" },
+  editor: {
+    newTitle: "New post", editTitle: "Edit post",
+    internalTitle: "Title (internal)", text: "Post text", media: "Images (URLs, one per line)",
+    link: "Link", channels: "Channels", noChannels: "Connect a channel first",
+    when: "Publish at", saveDraft: "Save draft", schedule: "Schedule", publishNow: "Publish now",
+    perChannel: "Custom text for this channel (optional)", chars: "characters",
+    ai: "AI rewrite", aiHint: "AI rewrites the text for the style and limits of each selected channel.",
+    tone: "Tone", tonePh: "e.g. friendly, expert, witty", language: "Language", sameLang: "same as source",
+    instructions: "Extra instructions", aiRun: "Rewrite for channels", aiBusy: "AI is writing…",
+    aiChooseChannels: "Pick channels so AI can adapt the text",
+    published: "Published", targetsTitle: "Publishing result", retry: "Retry failed",
+    readonly: "This post is already published and can't be edited.",
+  },
+  channels: {
+    title: "Channels", subtitle: "Where to publish. Tokens are stored on the server only.",
+    platform: "Platform", name: "Name", externalId: "Chat / page / account ID", token: "Access token",
+    connect: "Connect", none: "No channels yet",
+    help: {
+      telegram: "Create a bot with @BotFather and add it as a channel admin. ID: @channel_name or -100…",
+      facebook: "Page ID and a Page Access Token (Meta for Developers → Graph API, pages_manage_posts permission).",
+      instagram: "Instagram Business/Creator linked to a FB Page. ID = instagram_business_account, token = Page token with instagram_content_publish. An image is required.",
+      mock: "Test channel — sends nothing, just marks the post as published.",
+    },
+  },
+  sources: {
+    title: "Auto-posting", subtitle: "New articles from a WordPress site or any RSS feed automatically become posts.",
+    type: "Type", url: "Site / RSS URL", template: "Template", templateHint: "Variables: {title} {excerpt} {link}",
+    delay: "Delay, min", aiRewrite: "AI rewrite per channel", enabled: "Enabled",
+    sync: "Check now", lastChecked: "Checked", never: "never", imported: "New items imported",
+    none: "No sources yet", onlyNew: "Only articles published after the source was added are imported.",
+  },
+  planner: {
+    title: "AI content plan", nav: "AI plan",
+    subtitle: "Promotion agent: describe your product — AI writes a series of SEO-aware posts, spreads them over the days and puts them on your calendar.",
+    product: "What are we promoting", productPh: "Product/service description, benefits, price, website…",
+    audience: "Audience", audiencePh: "e.g. freelance SMM managers and small business owners",
+    goal: "Goal", goalPh: "e.g. free-trial sign-ups",
+    keywords: "SEO keywords", keywordsPh: "social media scheduler, telegram auto-posting, smm tool",
+    start: "Start", days: "Days", perWeek: "Posts per week",
+    asDrafts: "As drafts (I'll review)", asScheduled: "Schedule right away",
+    run: "Generate {n} posts", busy: "AI is planning… (up to a minute)",
+    needPlan: "Not enough AI credits — top up in Settings.", needKey: "AI is not configured: add an API key (GEMINI_API_KEY) on the server.",
+  },
+  credits: {
+    title: "AI credits", balance: "AI credit balance",
+    hint: "AI is billed separately from your plan: 1 rewrite = 1 credit, AI plan = 1 credit per post. The trial includes 30 free credits.",
+    rewriteCost: "1 credit", planCost: "{n} credits", topup: "Top up", soon: "Credit packs checkout is coming soon.",
+  },
+  trial: {
+    left: "Free trial: {n} days left. All Pro features + 30 AI credits.",
+    expired: "Your trial has ended. Posts are kept, but scheduling and publishing are paused.",
+    choose: "Choose a plan",
+  },
+  settings: {
+    title: "Settings", workspace: "Workspace", wsName: "Name", timezone: "Time zone",
+    tzHint: "All dates in the calendar and scheduler are shown in this time zone.", language: "Interface language",
+    plan: "Plan", saved: "Saved", account: "Account", now: "Current time there",
+  },
+  landing: {
+    metaTitle: "PostFlow — AI social media scheduler",
+    metaDesc: "Schedule posts to Telegram, Facebook and Instagram on a calendar, auto-post from WordPress and RSS, and rewrite copy with AI.",
+    badge: "Telegram · Facebook · Instagram · WordPress · RSS",
+    h1a: "Post everywhere.", h1b: "Plan it in minutes.",
+    lead: "PostFlow brings a content calendar, auto-posting from your website and an AI copywriter into one place. Write once — AI adapts it for every network, and the scheduler publishes right on time.",
+    ctaPrimary: "Start 14-day free trial", ctaSecondary: "How it works",
+    noCard: "14-day free trial with every feature. No credit card.",
+    featuresTitle: "Everything you need to run social media without the grind",
+    features: [
+      { icon: "📅", t: "Visual calendar", d: "See your whole month of content. Click a day and a new post is already dated." },
+      { icon: "⏱", t: "Precise scheduler", d: "Posts go out on time to every selected channel. Retry failures with one click." },
+      { icon: "✨", t: "AI rewrite", d: "One text → tailored versions for Telegram, Facebook and Instagram, respecting limits, style and hashtags." },
+      { icon: "🔁", t: "Auto-post from your site", d: "A new WordPress or RSS article becomes a social post automatically, using your template." },
+      { icon: "👥", t: "Many channels & projects", d: "Connect dozens of pages and channels. Built for agencies and freelance SMM pros." },
+      { icon: "📱", t: "Web, Android & iOS", d: "Plan from your laptop or phone — mobile apps run on the same API (coming soon)." },
+    ],
+    howTitle: "How it works",
+    steps: [
+      { t: "Connect channels", d: "Telegram bot, Facebook Page or Instagram — a couple of minutes." },
+      { t: "Write or import", d: "Create a post by hand or connect your site for auto-posting." },
+      { t: "Polish with AI", d: "Get a version for each network with a single click." },
+      { t: "Schedule", d: "Pick a date on the calendar — PostFlow handles the rest." },
+    ],
+    pricingTitle: "Simple pricing", perMonth: "/mo",
+    pricingSub: "Every plan starts with a 14-day free trial including all Pro features.",
+    aiAddon: { t: "✨ AI copywriter — billed separately", d: "Per-network rewrites and AI content plans use prepaid credit packs: pay only for what you use. 30 credits free during the trial.", price: "from $5 / 100 credits" },
+    plans: [
+      { name: "Starter", price: "$9", items: ["5 channels", "200 scheduled posts", "2 auto-posting sources", "Calendar & scheduler"], cta: "Start free trial" },
+      { name: "Pro", price: "$19", items: ["15 channels", "1,000 scheduled posts", "10 auto-posting sources", "Team collaboration (soon)"], cta: "Start free trial", featured: true },
+      { name: "Agency", price: "$49", items: ["100 channels", "Unlimited posts", "100 sources", "Priority support"], cta: "Start free trial" },
+    ],
+    popular: "Popular",
+    faqTitle: "FAQ",
+    faq: [
+      { q: "How is PostFlow different from WordPress plugins?", a: "PostFlow runs separately from your site: it doesn't slow WordPress down, schedules any post (not just articles), and comes with AI and mobile apps." },
+      { q: "Which networks are supported?", a: "Telegram, Facebook Pages and Instagram Business today. X, LinkedIn, Threads and Pinterest are next." },
+      { q: "Are my tokens safe?", a: "Tokens are stored on the server only and are never sent back to the browser." },
+      { q: "Which languages does the AI write in?", a: "Any: by default the language of your source text, or the one you choose." },
+    ],
+    finalTitle: "Ready to win back hours every week?", finalCta: "Create account",
+    footer: "Made in Ukraine 🇺🇦", login: "Log in", openApp: "Open app",
+  },
+};
+
+export const DICTS: Record<Locale, Dict> = { uk, en };
+export type { Dict };
+
+export function normalizeLocale(v: string | undefined | null): Locale {
+  return v === "en" ? "en" : "uk";
+}

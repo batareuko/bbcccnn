@@ -1,0 +1,162 @@
+// SQLite for local dev. For production switch provider to "postgresql".
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Accounts / multi-tenancy (SaaS) ───────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String   @default("")
+  passwordHash String
+  createdAt    DateTime @default(now())
+  sessions     Session[]
+  memberships  Membership[]
+}
+
+/// Opaque token; sent as httpOnly cookie (web) or `Authorization: Bearer` (mobile apps).
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// A customer account. All content is scoped to a workspace.
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  plan      String   @default("trial") // trial | starter | pro | agency — limits in src/lib/plans.ts
+  /// End of the 14-day free trial (set on sign-up). After it, a paid plan is required.
+  trialEndsAt DateTime?
+  /// Prepaid AI credits (AI is billed separately from the plan). 1 rewrite = 1 credit, AI plan = 1 credit per post.
+  aiCredits Int      @default(0)
+  /// IANA time zone used to display and enter dates (calendar, scheduler)
+  timezone  String   @default("Europe/Kyiv")
+  createdAt DateTime @default(now())
+  members   Membership[]
+  channels  Channel[]
+  posts     Post[]
+  sources   Source[]
+  aiUsage   AiUsage[]
+}
+
+/// Ledger of AI credit movements: negative = spent, positive = top-up / refund.
+model AiUsage {
+  id          String    @id @default(cuid())
+  workspaceId String
+  kind        String    // rewrite | content_plan | source_rewrite | topup | refund | trial
+  credits     Int
+  /// Which provider served it (internal, never shown to customers)
+  provider    String?
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+}
+
+model Membership {
+  id          String    @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        String    @default("owner") // owner | editor
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+// ─── Publishing ────────────────────────────────────────────────────
+
+/// A connected social account / page / channel we can publish to.
+model Channel {
+  id          String    @id @default(cuid())
+  workspaceId String
+  platform    String    // telegram | facebook | instagram | mock
+  name        String
+  /// Platform target id: Telegram chat (@channel or -100...), FB page id, IG business user id.
+  externalId  String
+  /// Bot token / page access token. Encrypt at rest before production.
+  accessToken String
+  color       String    @default("#6366f1")
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  targets     PostTarget[]
+}
+
+model Post {
+  id          String    @id @default(cuid())
+  workspaceId String
+  title       String    @default("")
+  content     String
+  /// JSON array of public image URLs
+  mediaUrls   String    @default("[]")
+  /// Link appended / attached (e.g. WordPress article URL)
+  link        String?
+  status      String    @default("draft") // draft | scheduled | publishing | published | failed
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  /// Set when the post was created automatically from a Source (e.g. WordPress article id)
+  sourceId    String?
+  sourceItemId String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  source      Source?   @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  targets     PostTarget[]
+
+  @@index([status, scheduledAt])
+  @@index([workspaceId, scheduledAt])
+  @@unique([sourceId, sourceItemId])
+}
+
+/// One post can go to several channels; each target can carry its own (AI-adapted) text.
+model PostTarget {
+  id              String    @id @default(cuid())
+  postId          String
+  channelId       String
+  contentOverride String?
+  status          String    @default("pending") // pending | published | failed
+  externalPostId  String?
+  error           String?
+  publishedAt     DateTime?
+  post            Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  channel         Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, channelId])
+}
+
+// ─── Auto-posting sources (FS Poster-style) ─────────────────────────
+
+/// A content feed watched for new items: a WordPress site or any RSS/Atom feed.
+/// New items become posts using `template`, sent to `channelIds`.
+model Source {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  type         String    @default("wordpress") // wordpress | rss
+  name         String
+  url          String    // WP site root (https://example.com) or RSS/Atom feed URL
+  /// Placeholders: {title} {excerpt} {link}
+  template     String    @default("{title}\n\n{excerpt}\n\n{link}")
+  /// JSON array of channel ids to post to
+  channelIds   String    @default("[]")
+  /// minutes after detection before publishing (0 = immediately)
+  delayMinutes Int       @default(0)
+  /// run AI rewrite per channel before posting
+  aiRewrite    Boolean   @default(false)
+  enabled      Boolean   @default(true)
+  lastCheckedAt DateTime?
+  /// Only items published after this moment are imported (avoids flooding with old articles)
+  sinceDate    DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  posts        Post[]
+}
